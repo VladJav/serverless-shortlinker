@@ -1,0 +1,60 @@
+org: clowsss
+app: serverless-shorlinker
+service: serverless-shortlinker
+frameworkVersion: '3'
+
+custom:
+  esbuild:
+    exclude: [ ]
+  dynamodb:
+    start:
+      migrate: true
+    stages:
+      - dev
+  tableName: 'userTable-${sls:stage}'
+
+provider:
+  name: aws
+  runtime: nodejs18.x
+  region: eu-central-1
+  environment:
+    DYNAMODB_USER_TABLE: ${self:custom.tableName}
+    JWT_REFRESH_SECRET: ${env.JWT_REFRESH_SECRET}
+    JWT_ACCESS_SECRET: ${env.JWT_ACCESS_SECRET}
+  iamRoleStatements:
+        - Effect: Allow
+          Action:
+            - dynamodb:Query
+            - dynamodb:Scan
+            - dynamodb:GetItem
+            - dynamodb:PutItem
+            - dynamodb:UpdateItem
+            - dynamodb:DeleteItem
+          Resource: "arn:aws:dynamodb:${aws:region}:${aws:accountId}:table/${self:custom.tableName}"
+
+functions:
+  function1:
+    handler: api/src/app.handler
+    events:
+      - httpApi: '*'
+
+resources:
+  Resources:
+    UserTable:
+      Type: AWS::DynamoDB::GlobalTable
+      Properties:
+        AttributeDefinitions:
+          - AttributeName: ID
+            AttributeType: S
+        KeySchema:
+          - AttributeName: ID
+            KeyType: HASH
+        Replicas:
+          - Region: "eu-central-1"
+        BillingMode: PAY_PER_REQUEST
+        TableName: ${self:custom.tableName}
+plugins:
+  - serverless-esbuild
+  - serverless-dynamodb-local
+  - serverless-offline
+
