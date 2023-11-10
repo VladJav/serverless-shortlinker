@@ -6,11 +6,6 @@ frameworkVersion: '3'
 custom:
   esbuild:
     exclude: [ ]
-  dynamodb:
-    start:
-      migrate: true
-    stages:
-      - dev
   tableName: 'userTable-${sls:stage}'
 
 provider:
@@ -55,6 +50,4 @@ resources:
         TableName: ${self:custom.tableName}
 plugins:
   - serverless-esbuild
-  - serverless-dynamodb-local
-  - serverless-offline
 
