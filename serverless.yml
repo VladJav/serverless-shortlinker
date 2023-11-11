@@ -6,14 +6,16 @@ frameworkVersion: '3'
 custom:
   esbuild:
     exclude: [ ]
-  tableName: 'userTable-${sls:stage}'
+  userTableName: 'userTable-${sls:stage}'
+  tokenTableName: 'tokenTable-${sls:stage}'
 
 provider:
   name: aws
   runtime: nodejs18.x
   region: eu-central-1
   environment:
-    DYNAMODB_USER_TABLE: ${self:custom.tableName}
+    DYNAMODB_USER_TABLE: ${self:custom.userTableName}
+    DYNAMODB_TOKEN_TABLE: ${self:custom.tokenTableName}
     JWT_REFRESH_SECRET: ${env.JWT_REFRESH_SECRET}
     JWT_ACCESS_SECRET: ${env.JWT_ACCESS_SECRET}
   iamRoleStatements:
@@ -25,7 +27,12 @@ provider:
             - dynamodb:PutItem
             - dynamodb:UpdateItem
             - dynamodb:DeleteItem
-          Resource: "arn:aws:dynamodb:${aws:region}:${aws:accountId}:table/${self:custom.tableName}"
+          Resource:
+            - "arn:aws:dynamodb:${aws:region}:${aws:accountId}:table/${self:custom.userTableName}"
+            - "arn:aws:dynamodb:${aws:region}:${aws:accountId}:table/${self:custom.userTableName}/index/*"
+            - "arn:aws:dynamodb:${aws:region}:${aws:accountId}:table/${self:custom.tokenTableName}"
+            - "arn:aws:dynamodb:${aws:region}:${aws:accountId}:table/${self:custom.tokenTableName}/index/*"
+
 
 functions:
   function1:
@@ -35,19 +42,41 @@ functions:
 
 resources:
   Resources:
+    TokenTable:
+      Type: AWS::DynamoDB::GlobalTable
+      Properties:
+        AttributeDefinitions:
+          - AttributeName: id
+            AttributeType: S
+        KeySchema:
+          - AttributeName: id
+            KeyType: HASH
+        Replicas:
+          - Region: 'eu-central-1'
+        BillingMode: PAY_PER_REQUEST
+        TableName: ${self:custom.tokenTableName}
     UserTable:
       Type: AWS::DynamoDB::GlobalTable
       Properties:
         AttributeDefinitions:
-          - AttributeName: ID
+          - AttributeName: id
+            AttributeType: S
+          - AttributeName: email
             AttributeType: S
         KeySchema:
-          - AttributeName: ID
+          - AttributeName: id
             KeyType: HASH
+        GlobalSecondaryIndexes:
+          - IndexName: EmailIndex
+            KeySchema:
+              - AttributeName: email
+                KeyType: HASH
+            Projection:
+              ProjectionType: 'ALL'
         Replicas:
           - Region: "eu-central-1"
         BillingMode: PAY_PER_REQUEST
-        TableName: ${self:custom.tableName}
+        TableName: ${self:custom.userTableName}
 plugins:
   - serverless-esbuild
 
