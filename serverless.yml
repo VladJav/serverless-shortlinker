@@ -40,12 +40,13 @@ functions:
   function1:
     handler: api/src/app.handler
     events:
-      - httpApi: '*'
+      - http: ANY /
+      - http: ANY {proxy+}
   showMe:
     handler: api/src/app.handler
     events:
       - http:
-          path: '/user/showMe'
+          path: '/user/me'
           method: get
           authorizer: auth
 

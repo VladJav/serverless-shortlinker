@@ -1,6 +1,5 @@
 import {Handler, PolicyDocument} from 'aws-lambda'
-import jwt from 'jsonwebtoken';
-
+import jwt, {JwtPayload} from 'jsonwebtoken';
 function generatePolicy (effect: string, resource: string): PolicyDocument {
     const policyDocument = {} as PolicyDocument;
     if (effect && resource) {
@@ -26,10 +25,14 @@ export const handler: Handler = (event, context, callback) => {
         return callback('Unauthorized');
     }
     try {
-        const decoded = jwt.verify(tokenValue, process.env.JWT_ACCESS_SECRET!);
+        const decoded = jwt.verify(tokenValue, process.env.JWT_ACCESS_SECRET!) as JwtPayload;
         return callback(null, {
             policyDocument: generatePolicy('Allow', event.methodArn),
-            principalId: decoded.sub
+            principalId: decoded.sub,
+            context: {
+                userId: decoded.userId,
+                email: decoded.email
+            }
         });
     } catch (err) {
         return callback('Unauthorized');

@@ -4,6 +4,11 @@ import {authRouter} from "./routes/authRoutes";
 import {notFoundMiddleware} from "./middleware/notFound";
 import {errorHandlerMiddleware} from "./middleware/errorHandler";
 import {userRouter} from "./routes/userRoutes";
+import {
+    APIGatewayProxyEvent,
+    Context,
+} from "aws-lambda";
+import { Request} from "express";
 
 const app = express();
 
@@ -14,8 +19,12 @@ app.use('/auth', authRouter);
 
 app.use(notFoundMiddleware);
 app.use(errorHandlerMiddleware);
-app.listen(8000, ()=>{
-    console.log('Hi');
-})
 
-export const handler = serverless(app);
+export const handler = serverless(app, {
+    request: function (req: Request, event: APIGatewayProxyEvent, context: Context) {
+        // context.callbackWaitsForEmptyEventLoop = false;
+        req.user = {
+            email: event.requestContext.authorizer?.email,
+            userId: event.requestContext.authorizer?.userId
+        };
+    }});
