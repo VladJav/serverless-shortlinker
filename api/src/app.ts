@@ -3,10 +3,13 @@ import serverless from 'serverless-http';
 import {authRouter} from "./routes/authRoutes";
 import {notFoundMiddleware} from "./middleware/notFound";
 import {errorHandlerMiddleware} from "./middleware/errorHandler";
+import {userRouter} from "./routes/userRoutes";
 
 const app = express();
 
 app.use(express.json());
+
+app.use('/user', userRouter);
 app.use('/auth', authRouter);
 
 app.use(notFoundMiddleware);

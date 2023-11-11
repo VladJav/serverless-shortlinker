@@ -35,10 +35,19 @@ provider:
 
 
 functions:
+  auth:
+    handler: auth/handler.handler
   function1:
     handler: api/src/app.handler
     events:
       - httpApi: '*'
+  showMe:
+    handler: api/src/app.handler
+    events:
+      - http:
+          path: '/user/showMe'
+          method: get
+          authorizer: auth
 
 resources:
   Resources:
