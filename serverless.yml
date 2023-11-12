@@ -8,6 +8,7 @@ custom:
     exclude: [ ]
   userTableName: 'userTable-${sls:stage}'
   tokenTableName: 'tokenTable-${sls:stage}'
+  linkTableName: 'linkTable-${sls:stage}'
 
 provider:
   name: aws
@@ -16,6 +17,7 @@ provider:
   environment:
     DYNAMODB_USER_TABLE: ${self:custom.userTableName}
     DYNAMODB_TOKEN_TABLE: ${self:custom.tokenTableName}
+    DYNAMODB_LINK_TABLE: ${self:custom.linkTableName}
     JWT_REFRESH_SECRET: ${env.JWT_REFRESH_SECRET}
     JWT_ACCESS_SECRET: ${env.JWT_ACCESS_SECRET}
   iamRoleStatements:
@@ -32,6 +34,8 @@ provider:
             - "arn:aws:dynamodb:${aws:region}:${aws:accountId}:table/${self:custom.userTableName}/index/*"
             - "arn:aws:dynamodb:${aws:region}:${aws:accountId}:table/${self:custom.tokenTableName}"
             - "arn:aws:dynamodb:${aws:region}:${aws:accountId}:table/${self:custom.tokenTableName}/index/*"
+            - "arn:aws:dynamodb:${aws:region}:${aws:accountId}:table/${self:custom.linkTableName}"
+            - "arn:aws:dynamodb:${aws:region}:${aws:accountId}:table/${self:custom.linkTableName}/index/*"
 
 
 functions:
@@ -41,17 +45,44 @@ functions:
     handler: api/src/app.handler
     events:
       - http: ANY /
-      - http: ANY {proxy+}
-  showMe:
-    handler: api/src/app.handler
-    events:
       - http:
           path: '/user/me'
           method: get
           authorizer: auth
+      - http:
+          path: '/links'
+          method: ANY
+          authorizer: auth
+      - http: ANY {proxy+}
 
 resources:
   Resources:
+    LinkTable:
+      Type: AWS::DynamoDB::GlobalTable
+      Properties:
+        AttributeDefinitions:
+          - AttributeName: id
+            AttributeType: S
+          - AttributeName: user_id
+            AttributeType: S
+          - AttributeName: shortLink
+            AttributeType: S
+        KeySchema:
+          - AttributeName: id
+            KeyType: HASH
+          - AttributeName: user_id
+            KeyType: RANGE
+        GlobalSecondaryIndexes:
+          - IndexName: ShorLinkIndex
+            KeySchema:
+              - AttributeName: shortLink
+                KeyType: HASH
+            Projection:
+              ProjectionType: 'ALL'
+        Replicas:
+          - Region: "eu-central-1"
+        BillingMode: PAY_PER_REQUEST
+        TableName: ${self:custom.linkTableName}
     TokenTable:
       Type: AWS::DynamoDB::GlobalTable
       Properties:
