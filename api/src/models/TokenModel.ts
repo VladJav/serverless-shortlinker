@@ -10,7 +10,7 @@ export class TokenModel{
         };
         const putCommand = new PutCommand({
             Item: item,
-            TableName: process.env.DYNAMODB_TOKEN_TABLE!
+            TableName: process.env.DYNAMODB_TOKEN_TABLE
         })
         await documentClient.send(putCommand);
         return item;
@@ -20,7 +20,7 @@ export class TokenModel{
             Key: {
                 id
             },
-            TableName: process.env.DYNAMODB_TOKEN_TABLE!
+            TableName: process.env.DYNAMODB_TOKEN_TABLE
 
         });
         const findResult = await documentClient.send(queryCommand);

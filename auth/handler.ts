@@ -1,18 +1,6 @@
 import {Handler, PolicyDocument} from 'aws-lambda'
 import jwt, {JwtPayload} from 'jsonwebtoken';
-function generatePolicy (effect: string, resource: string): PolicyDocument {
-    const policyDocument = {} as PolicyDocument;
-    if (effect && resource) {
-        policyDocument.Version = '2012-10-17';
-        policyDocument.Statement = [];
-        const statementOne: any = {};
-        statementOne.Action = 'execute-api:Invoke';
-        statementOne.Effect = effect;
-        statementOne.Resource = resource;
-        policyDocument.Statement[0] = statementOne;
-    }
-    return policyDocument;
-}
+import {generatePolicy} from "./generatePolicy";
 
 export const handler: Handler = (event, context, callback) => {
     if(!event.authorizationToken){

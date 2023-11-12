@@ -20,8 +20,8 @@ export const registerUser = async (req: Request, res: Response, next: NextFuncti
         }
 
         const { id } = await UserModel.create(email, password);
-        const accessToken = sign({userId: id, email}, process.env.JWT_ACCESS_SECRET!,  { expiresIn: process.env.JWT_ACCESS_TTL || '60m'});
-        const refreshToken = sign({userId: id, email}, process.env.JWT_REFRESH_SECRET!);
+        const accessToken = sign({userId: id, email}, process.env.JWT_ACCESS_SECRET,  { expiresIn: process.env.JWT_ACCESS_TTL || '60m'});
+        const refreshToken = sign({userId: id, email}, process.env.JWT_REFRESH_SECRET);
 
         await TokenModel.save(id, userAgent, refreshToken);
         res.json({
@@ -58,8 +58,8 @@ export const loginUser = async (req: Request, res: Response, next: NextFunction)
             throw new UnauthenticatedError('Please provide correct credentials');
         }
 
-        const accessToken = sign({userId: user.id, email}, process.env.JWT_ACCESS_SECRET!,  { expiresIn: process.env.JWT_ACCESS_TTL || '60m'});
-        const refreshToken = sign({userId: user.id, email}, process.env.JWT_REFRESH_SECRET!);
+        const accessToken = sign({userId: user.id, email}, process.env.JWT_ACCESS_SECRET,  { expiresIn: process.env.JWT_ACCESS_TTL || '60m'});
+        const refreshToken = sign({userId: user.id, email}, process.env.JWT_REFRESH_SECRET);
 
         await TokenModel.save(user.id, userAgent, refreshToken);
 

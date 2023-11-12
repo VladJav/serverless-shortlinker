@@ -22,7 +22,6 @@ app.use(errorHandlerMiddleware);
 
 export const handler = serverless(app, {
     request: function (req: Request, event: APIGatewayProxyEvent, context: Context) {
-        // context.callbackWaitsForEmptyEventLoop = false;
         req.user = {
             email: event.requestContext.authorizer?.email,
             userId: event.requestContext.authorizer?.userId
