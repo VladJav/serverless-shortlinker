@@ -10,6 +10,7 @@ import {
 } from "aws-lambda";
 import { Request} from "express";
 import {linkRouter} from "./routes/linkRoutes";
+import {redirectLink} from "./controllers/linkController";
 
 const app = express();
 
@@ -18,6 +19,7 @@ app.use(express.json());
 app.use('/user', userRouter);
 app.use('/auth', authRouter);
 app.use('/links', linkRouter);
+app.get('/:path', redirectLink);
 
 app.use(notFoundMiddleware);
 app.use(errorHandlerMiddleware);

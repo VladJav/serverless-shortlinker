@@ -1,4 +1,4 @@
-import {PutCommand, QueryCommand} from "@aws-sdk/lib-dynamodb";
+import {PutCommand, QueryCommand, UpdateCommand} from "@aws-sdk/lib-dynamodb";
 import {documentClient} from "../db/dynamoDb";
 import {v4 as uuidv4} from "uuid";
 
@@ -26,6 +26,18 @@ export class LinkModel{
         });
         await documentClient.send(putCommand);
     }
+    static async findByUserId(userId: string){
+        const queryCommand = new QueryCommand({
+            TableName: process.env.DYNAMODB_LINK_TABLE,
+            IndexName: 'UserIdIndex',
+            KeyConditionExpression: "user_id = :user_id",
+            ExpressionAttributeValues: {
+                ":user_id": userId,
+            },
+        });
+        const { Items } = await documentClient.send(queryCommand);
+        return Items;
+    }
     static async findByShortLink(shortLink: string){
         const queryCommand = new QueryCommand({
             TableName: process.env.DYNAMODB_LINK_TABLE,
@@ -35,9 +47,22 @@ export class LinkModel{
                 ":shortLink": shortLink,
             },
             Limit: 1
-
         })
         const { Items } = await documentClient.send(queryCommand);
         return Items;
+    }
+
+    static async updateVisitedTimes(id: string){
+        const putCommand = new UpdateCommand({
+            TableName: process.env.DYNAMODB_LINK_TABLE,
+            Key: {
+                id
+            },
+            ExpressionAttributeValues: {
+                ':incr': 1
+            },
+            UpdateExpression: 'SET visitedTimes = visitedTimes + :incr',
+        });
+        await documentClient.send(putCommand);
     }
 }

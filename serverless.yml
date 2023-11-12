@@ -8,7 +8,7 @@ custom:
     exclude: [ ]
   userTableName: 'userTable-${sls:stage}'
   tokenTableName: 'tokenTable-${sls:stage}'
-  linkTableName: 'linkTable-${sls:stage}'
+  linkTableName: 'linksTable-${sls:stage}'
 
 provider:
   name: aws
@@ -70,12 +70,16 @@ resources:
         KeySchema:
           - AttributeName: id
             KeyType: HASH
-          - AttributeName: user_id
-            KeyType: RANGE
         GlobalSecondaryIndexes:
           - IndexName: ShorLinkIndex
             KeySchema:
               - AttributeName: shortLink
+                KeyType: HASH
+            Projection:
+              ProjectionType: 'ALL'
+          - IndexName: UserIdIndex
+            KeySchema:
+              - AttributeName: user_id
                 KeyType: HASH
             Projection:
               ProjectionType: 'ALL'

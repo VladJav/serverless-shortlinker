@@ -5,7 +5,6 @@ import {BadRequestError, ConflictError, NotFoundError, UnauthenticatedError} fro
 import {UserModel} from "../models/UserModel";
 import {TokenModel} from "../models/TokenModel";
 
-
 export const registerUser = async (req: Request, res: Response, next: NextFunction) => {
     try {
         const userAgent = req.headers['user-agent'] || '';
