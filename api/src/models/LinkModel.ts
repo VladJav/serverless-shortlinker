@@ -1,4 +1,4 @@
-import {PutCommand, QueryCommand, UpdateCommand} from "@aws-sdk/lib-dynamodb";
+import { PutCommand, QueryCommand, UpdateCommand} from "@aws-sdk/lib-dynamodb";
 import {documentClient} from "../db/dynamoDb";
 import {v4 as uuidv4} from "uuid";
 
@@ -16,6 +16,7 @@ export class LinkModel{
             user_id: userId,
             shortLink,
             fullLink,
+            isActive: true,
             visitedTimes: 0,
             expiresIn,
             isOneTime
@@ -62,6 +63,19 @@ export class LinkModel{
                 ':incr': 1
             },
             UpdateExpression: 'SET visitedTimes = visitedTimes + :incr',
+        });
+        await documentClient.send(putCommand);
+    }
+    static async updateIsActive(id: string, isActive: boolean){
+        const putCommand = new UpdateCommand({
+            TableName: process.env.DYNAMODB_LINK_TABLE,
+            Key: {
+                id
+            },
+            ExpressionAttributeValues: {
+                ':isActive': isActive
+            },
+            UpdateExpression: 'SET isActive = :isActive',
         });
         await documentClient.send(putCommand);
     }

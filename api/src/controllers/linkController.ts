@@ -1,5 +1,5 @@
 import {NextFunction, Request, Response} from "express";
-import {BadRequestError, NotFoundError} from "../errors";
+import {BadRequestError, NotFoundError, UnauthenticatedError} from "../errors";
 import {isValidUrl} from "../utils/isValidUrl";
 import {LinkModel} from "../models/LinkModel";
 import {DAY} from "../constants/date";
@@ -61,20 +61,60 @@ export const createLink = async (req: Request, res: Response, next: NextFunction
 };
 
 export const getLinks =  async (req: Request, res: Response, next: NextFunction) => {
-    const { userId } = req.user;
-    const links = await LinkModel.findByUserId(userId);
-    res.json(links);
+    try {
+        const { userId } = req.user;
+        const links = await LinkModel.findByUserId(userId);
+        res.json(links);
+    }
+    catch (e) {
+        next(e);
+    }
 };
 
-export const redirectLink = async (req: Request, res: Response) => {
-    const { path } = req.params;
+export const redirectLink = async (req: Request, res: Response, next: NextFunction) => {
+    try {
+        const { path } = req.params;
 
-    let findResult = await LinkModel.findByShortLink(path);
-    if(!findResult?.length){
-        throw new NotFoundError('Path does not exists');
+        let findResult = await LinkModel.findByShortLink(path);
+        if(!findResult?.length){
+            throw new NotFoundError('Path does not exists');
+        }
+        const [ link ] = findResult;
+
+        await LinkModel.updateVisitedTimes(link.id);
+        res.redirect(link.fullLink);
     }
-    const [ link ] = findResult;
+    catch (e) {
+        next(e);
+    }
+};
 
-    await LinkModel.updateVisitedTimes(link.id);
-    res.redirect(link.fullLink);
+export const deactivateLink = async (req: Request, res: Response, next: NextFunction) => {
+    try {
+        const { path } = req.params;
+        const { userId } = req.user;
+
+        const findResult = await LinkModel.findByShortLink(path);
+
+        if(!findResult?.length){
+            throw new NotFoundError('Link does not exists');
+        }
+
+        const [ link ] = findResult;
+        if(link.userId !== userId){
+            throw new UnauthenticatedError('Access denied');
+        }
+        if(!link.isActive){
+            throw new BadRequestError('Link is already deactivated');
+        }
+
+        await LinkModel.updateIsActive(link.id, false);
+        res.json({
+            success: true,
+            message: 'Link was deactivated'
+        });
+    }
+    catch (e) {
+        next(e);
+    }
 };

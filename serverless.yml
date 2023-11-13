@@ -1,5 +1,5 @@
 org: clowsss
-app: serverless-shorlinker
+app: sls-new
 service: serverless-shortlinker
 frameworkVersion: '3'
 
