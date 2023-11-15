@@ -13,8 +13,8 @@ export const registerUser = async (req: Request, res: Response, next: NextFuncti
             throw new BadRequestError('Please provide correct data');
         }
 
-        const users = await UserModel.findByEmail(email);
-        if(users?.length !== 0){
+        const findResult = await UserModel.findByEmail(email);
+        if(findResult?.length !== 0){
             throw new ConflictError('User with this email already exists');
         }
 
@@ -23,8 +23,7 @@ export const registerUser = async (req: Request, res: Response, next: NextFuncti
         const refreshToken = sign({userId: id, email}, process.env.JWT_REFRESH_SECRET);
 
         await TokenModel.save(id, userAgent, refreshToken);
-        res.json({
-            users,
+        res.status(201).json({
             success: true,
             data: {
                 id,
@@ -47,7 +46,7 @@ export const loginUser = async (req: Request, res: Response, next: NextFunction)
         }
 
         const findResult = await UserModel.findByEmail(email);
-        if(findResult?.length! === 0 || !findResult){
+        if(findResult?.length === 0 || !findResult){
             throw new NotFoundError(`User with email: ${email} does not exists`);
         }
         const user = findResult[0];

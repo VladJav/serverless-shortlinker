@@ -65,6 +65,10 @@ functions:
           path: '/links'
           method: ANY
           authorizer: auth
+      - http:
+          path: '/links/{path}'
+          method: DELETE
+          authorizer: auth
       - http: ANY {proxy+}
 #  scheduler:
 #    handler: scheduler/handler.handler

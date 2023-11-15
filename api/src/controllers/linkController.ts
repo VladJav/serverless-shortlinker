@@ -3,6 +3,8 @@ import {BadRequestError, NotFoundError, UnauthenticatedError} from "../errors";
 import {isValidUrl} from "../utils/isValidUrl";
 import {LinkModel} from "../models/LinkModel";
 import {DAY} from "../constants/date";
+import {UserModel} from "../models/UserModel";
+import {SendMessageCommand, SQSClient} from "@aws-sdk/client-sqs";
 
 export const createLink = async (req: Request, res: Response, next: NextFunction) => {
     try {
@@ -95,21 +97,37 @@ export const deactivateLink = async (req: Request, res: Response, next: NextFunc
         const { path } = req.params;
         const { userId } = req.user;
 
-        const findResult = await LinkModel.findByShortLink(path);
+        const findLinkResult = await LinkModel.findByShortLink(path);
 
-        if(!findResult?.length){
+        if(!findLinkResult?.length){
             throw new NotFoundError('Link does not exists');
         }
 
-        const [ link ] = findResult;
-        if(link.userId !== userId){
+        const [ link ] = findLinkResult;
+
+        if(link.user_id !== userId){
             throw new UnauthenticatedError('Access denied');
         }
         if(!link.isActive){
             throw new BadRequestError('Link is already deactivated');
         }
 
-        await LinkModel.updateIsActive(link.id, false);
+        await LinkModel.updateIsActive(link.id, 0);
+
+        const findUserResult = await UserModel.findById(link.user_id);
+        if(!findUserResult) throw new Error('User not found');
+        const [ user ] = findUserResult;
+
+        const sendParams = new SendMessageCommand({
+            MessageBody: JSON.stringify({
+                link,
+                user
+            }),
+            QueueUrl: process.env.MAIL_QUEUE_URL
+        });
+        const client = new SQSClient();
+        await client.send(sendParams);
+
         res.json({
             success: true,
             message: 'Link was deactivated'
