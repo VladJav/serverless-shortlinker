@@ -1,13 +1,18 @@
 import {NextFunction, Request, Response} from "express";
 import {compare} from "bcryptjs";
-import {sign} from "jsonwebtoken";
+import {JwtPayload, sign, verify} from "jsonwebtoken";
 import {BadRequestError, ConflictError, NotFoundError, UnauthenticatedError} from "../errors";
 import {UserModel} from "../models/UserModel";
 import {TokenModel} from "../models/TokenModel";
+import {sendVerificationMail} from "../utils/sendVerificationMail";
 
 export const registerUser = async (req: Request, res: Response, next: NextFunction) => {
     try {
         const userAgent = req.headers['user-agent'] || '';
+        const protocol = req.protocol;
+        const host = req.headers.host;
+        const requestUrl = `${protocol}://${host}`
+
         const { email, password } = req.body;
         if (!email || !password || !email.match(/^[\w-\.]+@([\w-]+\.)+[\w-]{2,4}$/g)) {
             throw new BadRequestError('Please provide correct data');
@@ -18,23 +23,36 @@ export const registerUser = async (req: Request, res: Response, next: NextFuncti
             throw new ConflictError('User with this email already exists');
         }
 
-        const { id } = await UserModel.create(email, password);
-        const accessToken = sign({userId: id, email}, process.env.JWT_ACCESS_SECRET,  { expiresIn: process.env.JWT_ACCESS_TTL || '60m'});
-        const refreshToken = sign({userId: id, email}, process.env.JWT_REFRESH_SECRET);
+        const activationCode = sign({email}, process.env.JWT_ACCESS_SECRET,  {expiresIn: '30m'});
 
-        await TokenModel.save(id, userAgent, refreshToken);
+        await UserModel.create(email, password, activationCode);
+        await sendVerificationMail(email, activationCode, requestUrl)
         res.status(201).json({
             success: true,
-            data: {
-                id,
-                accessToken,
-                refreshToken
-            }
+            message: 'Success! Check your email to verify account'
         });
     }
     catch (e) {
         next(e);
     }
+};
+
+export const activateUser = async (req: Request, res: Response, next: NextFunction) => {
+    const { token } = req.params;
+
+    const { email } = verify(token, process.env.JWT_ACCESS_SECRET) as JwtPayload;
+    const findResult = await UserModel.findByEmail(email);
+    if(!findResult){
+        throw new UnauthenticatedError('Bad Token');
+    }
+    const [user] = findResult;
+
+    await UserModel.updateActivationStatus(user.id, true, '');
+
+    res.json({
+       success: true,
+       message: 'Email verified. Now you can login to start working with api'
+    });
 };
 
 export const loginUser = async (req: Request, res: Response, next: NextFunction) => {
@@ -55,7 +73,9 @@ export const loginUser = async (req: Request, res: Response, next: NextFunction)
         if (!isPasswordCorrect) {
             throw new UnauthenticatedError('Please provide correct credentials');
         }
-
+        if (!user.isActivated) {
+            throw new UnauthenticatedError('Please verify your email');
+        }
         const accessToken = sign({userId: user.id, email}, process.env.JWT_ACCESS_SECRET,  { expiresIn: process.env.JWT_ACCESS_TTL || '60m'});
         const refreshToken = sign({userId: user.id, email}, process.env.JWT_REFRESH_SECRET);
 

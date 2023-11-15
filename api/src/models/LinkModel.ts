@@ -67,7 +67,7 @@ export class LinkModel{
         return Items;
     }
     static async updateVisitedTimes(id: string){
-        const putCommand = new UpdateCommand({
+        const updateCommand = new UpdateCommand({
             TableName: process.env.DYNAMODB_LINK_TABLE,
             Key: {
                 id
@@ -77,10 +77,10 @@ export class LinkModel{
             },
             UpdateExpression: 'SET visitedTimes = visitedTimes + :incr',
         });
-        await documentClient.send(putCommand);
+        await documentClient.send(updateCommand);
     }
     static async updateIsActive(id: string, isActive: number){
-        const putCommand = new UpdateCommand({
+        const updateCommand = new UpdateCommand({
             TableName: process.env.DYNAMODB_LINK_TABLE,
             Key: {
                 id
@@ -90,6 +90,6 @@ export class LinkModel{
             },
             UpdateExpression: 'SET isActive = :isActive',
         });
-        await documentClient.send(putCommand);
+        await documentClient.send(updateCommand);
     }
 }
