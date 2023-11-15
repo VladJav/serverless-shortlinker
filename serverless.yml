@@ -3,13 +3,14 @@ app: sls-new
 service: serverless-shortlinker
 frameworkVersion: '3'
 
+useDotenv: true
 custom:
   esbuild:
     exclude: [ ]
   userTableName: 'userTable-${sls:stage}'
   tokenTableName: 'tokenTable-${sls:stage}'
   linkTableName: 'linksTable-${sls:stage}'
-
+  mailQueueName: 'mailQueue-${sls:stage}'
 provider:
   name: aws
   runtime: nodejs18.x
@@ -18,8 +19,11 @@ provider:
     DYNAMODB_USER_TABLE: ${self:custom.userTableName}
     DYNAMODB_TOKEN_TABLE: ${self:custom.tokenTableName}
     DYNAMODB_LINK_TABLE: ${self:custom.linkTableName}
-    JWT_REFRESH_SECRET: ${env.JWT_REFRESH_SECRET}
-    JWT_ACCESS_SECRET: ${env.JWT_ACCESS_SECRET}
+    MAIL_QUEUE: ${self:custom.mailQueueName}
+    MAIL_QUEUE_URL: { Ref: MailQueue}
+    JWT_REFRESH_SECRET: ${env:JWT_REFRESH_SECRET}
+    JWT_ACCESS_SECRET: ${env:JWT_ACCESS_SECRET}
+    SOURCE_EMAIL: ${env:SOURCE_EMAIL}
   iamRoleStatements:
         - Effect: Allow
           Action:
@@ -36,7 +40,15 @@ provider:
             - "arn:aws:dynamodb:${aws:region}:${aws:accountId}:table/${self:custom.tokenTableName}/index/*"
             - "arn:aws:dynamodb:${aws:region}:${aws:accountId}:table/${self:custom.linkTableName}"
             - "arn:aws:dynamodb:${aws:region}:${aws:accountId}:table/${self:custom.linkTableName}/index/*"
-
+        - Effect: Allow
+          Action:
+            - "sqs:SendMessage"
+            - "sqs:GetQueueUrl"
+          Resource: "arn:aws:sqs:${aws:region}:${aws:accountId}:${self:custom.mailQueueName}"
+        - Effect: Allow
+          Action:
+            - "ses:*"
+          Resource: "*"
 
 functions:
   auth:
@@ -54,6 +66,17 @@ functions:
           method: ANY
           authorizer: auth
       - http: ANY {proxy+}
+#  scheduler:
+#    handler: scheduler/handler.handler
+#    events:
+#      - eventBridge:
+#          schedule: rate(1 minute)
+  receiver:
+    handler: queue/handler.handler
+    events:
+      - sqs:
+          arn:
+            "arn:aws:sqs:${aws:region}:${aws:accountId}:${self:custom.mailQueueName}"
 
 resources:
   Resources:
@@ -67,10 +90,22 @@ resources:
             AttributeType: S
           - AttributeName: shortLink
             AttributeType: S
+          - AttributeName: isActive
+            AttributeType: N
+          - AttributeName: expiresIn
+            AttributeType: S
         KeySchema:
           - AttributeName: id
             KeyType: HASH
         GlobalSecondaryIndexes:
+          - IndexName: IsActiveIndex
+            KeySchema:
+              - AttributeName: isActive
+                KeyType: HASH
+              - AttributeName: expiresIn
+                KeyType: RANGE
+            Projection:
+              ProjectionType: 'ALL'
           - IndexName: ShorLinkIndex
             KeySchema:
               - AttributeName: shortLink
@@ -122,6 +157,11 @@ resources:
           - Region: "eu-central-1"
         BillingMode: PAY_PER_REQUEST
         TableName: ${self:custom.userTableName}
+    MailQueue:
+      Type: AWS::SQS::Queue
+      Properties:
+        QueueName: ${self:custom.mailQueueName}
 plugins:
   - serverless-esbuild
+  - serverless-dotenv-plugin
 

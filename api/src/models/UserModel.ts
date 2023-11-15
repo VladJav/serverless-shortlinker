@@ -21,6 +21,18 @@ export class UserModel{
         await documentClient.send(putCommand);
         return item;
     }
+    static async findById(id: string){
+        const queryCommand = new QueryCommand({
+            TableName: process.env.DYNAMODB_USER_TABLE,
+            KeyConditionExpression: "id = :id",
+            ExpressionAttributeValues: {
+                ":id": id,
+            },
+            Limit: 1
+        })
+        const { Items } = await documentClient.send(queryCommand);
+        return Items;
+    }
     static async findByEmail(email: string){
         const queryCommand = new QueryCommand({
             TableName: process.env.DYNAMODB_USER_TABLE,

@@ -16,7 +16,7 @@ export class LinkModel{
             user_id: userId,
             shortLink,
             fullLink,
-            isActive: true,
+            isActive: 1,
             visitedTimes: 0,
             expiresIn,
             isOneTime
@@ -39,6 +39,20 @@ export class LinkModel{
         const { Items } = await documentClient.send(queryCommand);
         return Items;
     }
+    static async findExpiredLinks(){
+        const queryCommand = new QueryCommand({
+            TableName: process.env.DYNAMODB_LINK_TABLE,
+            IndexName: 'IsActiveIndex',
+            KeyConditionExpression: "isActive = :isActive AND expiresIn < :currentDate",
+            ExpressionAttributeValues: {
+                ':isActive': 1,
+                ':currentDate': new Date(Date.now()).toISOString()
+            },
+        });
+
+        const { Items } = await documentClient.send(queryCommand);
+        return Items || [];
+    }
     static async findByShortLink(shortLink: string){
         const queryCommand = new QueryCommand({
             TableName: process.env.DYNAMODB_LINK_TABLE,
@@ -52,7 +66,6 @@ export class LinkModel{
         const { Items } = await documentClient.send(queryCommand);
         return Items;
     }
-
     static async updateVisitedTimes(id: string){
         const putCommand = new UpdateCommand({
             TableName: process.env.DYNAMODB_LINK_TABLE,
@@ -66,7 +79,7 @@ export class LinkModel{
         });
         await documentClient.send(putCommand);
     }
-    static async updateIsActive(id: string, isActive: boolean){
+    static async updateIsActive(id: string, isActive: number){
         const putCommand = new UpdateCommand({
             TableName: process.env.DYNAMODB_LINK_TABLE,
             Key: {

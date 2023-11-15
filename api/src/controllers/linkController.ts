@@ -82,6 +82,7 @@ export const redirectLink = async (req: Request, res: Response, next: NextFuncti
         const [ link ] = findResult;
 
         await LinkModel.updateVisitedTimes(link.id);
+
         res.redirect(link.fullLink);
     }
     catch (e) {
