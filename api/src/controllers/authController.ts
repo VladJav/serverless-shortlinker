@@ -37,21 +37,26 @@ export const registerUser = async (req: Request, res: Response, next: NextFuncti
 };
 
 export const activateUser = async (req: Request, res: Response, next: NextFunction) => {
-    const { token } = req.params;
+    try{
+        const { token } = req.params;
 
-    const { email } = verify(token, process.env.JWT_ACCESS_SECRET) as JwtPayload;
-    const findResult = await UserModel.findByEmail(email);
-    if(!findResult){
-        throw new UnauthenticatedError('Bad Token');
+        const { email } = verify(token, process.env.JWT_ACCESS_SECRET) as JwtPayload;
+        const findResult = await UserModel.findByEmail(email);
+        if(!findResult){
+            throw new UnauthenticatedError('Bad Token');
+        }
+        const [user] = findResult;
+
+        await UserModel.updateActivationStatus(user.id, true, '');
+
+        res.json({
+            success: true,
+            message: 'Email verified. Now you can login to start working with api'
+        });
     }
-    const [user] = findResult;
-
-    await UserModel.updateActivationStatus(user.id, true, '');
-
-    res.json({
-       success: true,
-       message: 'Email verified. Now you can login to start working with api'
-    });
+    catch (e) {
+        next(e);
+    }
 };
 
 export const loginUser = async (req: Request, res: Response, next: NextFunction) => {
