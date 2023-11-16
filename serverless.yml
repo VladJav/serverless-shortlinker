@@ -16,6 +16,7 @@ provider:
   runtime: nodejs18.x
   region: eu-central-1
   environment:
+    STAGE: ${sls:stage}
     DYNAMODB_USER_TABLE: ${self:custom.userTableName}
     DYNAMODB_TOKEN_TABLE: ${self:custom.tokenTableName}
     DYNAMODB_LINK_TABLE: ${self:custom.linkTableName}

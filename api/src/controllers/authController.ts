@@ -8,10 +8,9 @@ import {sendVerificationMail} from "../utils/sendVerificationMail";
 
 export const registerUser = async (req: Request, res: Response, next: NextFunction) => {
     try {
-        const userAgent = req.headers['user-agent'] || '';
         const protocol = req.protocol;
         const host = req.headers.host;
-        const requestUrl = `${protocol}://${host}`
+        const requestUrl = `${protocol}://${host}/${process.env.STAGE}`
 
         const { email, password } = req.body;
         if (!email || !password || !email.match(/^[\w-\.]+@([\w-]+\.)+[\w-]{2,4}$/g)) {

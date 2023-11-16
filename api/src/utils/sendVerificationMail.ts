@@ -15,7 +15,7 @@ export const sendVerificationMail = async (toEmail: string, activationCode: stri
             Body: {
                 Html: {
                     Data: `<h2>Please click on below link to activate your account</h2>
-                           <p>${requestUrl}/activate-account/${activationCode}</p>
+                           <p>${requestUrl}/auth/activate/${activationCode}</p>
                            <p><b>NOTE: </b> The above activation link expires in 30 minutes.</p>`
                 }
             }

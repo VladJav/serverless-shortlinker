@@ -54,7 +54,7 @@ export const createLink = async (req: Request, res: Response, next: NextFunction
         });
 
         res.status(201).json({
-            link: `${protocol}://${host}/${shortLink}`
+            link: `${protocol}://${host}/${process.env.STAGE}/${shortLink}`
         });
     }
     catch (e) {

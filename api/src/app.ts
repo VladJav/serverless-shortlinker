@@ -16,6 +16,9 @@ const app = express();
 
 app.use(express.json());
 
+app.get('/test', (req, res) => {
+    res.send(process.env.STAGE);
+});
 app.use('/user', userRouter);
 app.use('/auth', authRouter);
 app.use('/links', linkRouter);
