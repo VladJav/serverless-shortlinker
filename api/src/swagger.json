@@ -1,0 +1,422 @@
+{
+  "openapi": "3.0.0",
+  "info": {
+    "title": "ShortLinker Product",
+    "contact": {},
+    "version": "1.0"
+  },
+  "servers": [
+    {
+      "url": "https://y5136xhfy7.execute-api.eu-central-1.amazonaws.com/dev",
+      "variables": {}
+    }
+  ],
+  "paths": {
+    "/auth/register": {
+      "post": {
+        "tags": [
+          "Auth"
+        ],
+        "summary": "Register User",
+        "description": "Creates new user and sends verification email",
+        "operationId": "RegisterUser",
+        "parameters": [],
+        "requestBody": {
+          "description": "",
+          "content": {
+            "application/json": {
+              "schema": {
+                "allOf": [
+                  {
+                    "$ref": "#/components/schemas/RegisterUserRequest"
+                  },
+                  {
+                    "example": {
+                      "email": "example@gmail.com",
+                      "password": "password"
+                    }
+                  }
+                ]
+              },
+              "example": {
+                "email": "example@gmail.com",
+                "password": "password"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "",
+            "headers": {}
+          }
+        },
+        "deprecated": false,
+        "security": [],
+        "servers": [
+          {
+            "url": "https://y5136xhfy7.execute-api.eu-central-1.amazonaws.com/dev",
+            "variables": {}
+          }
+        ]
+      }
+    },
+    "/auth/login": {
+      "post": {
+        "tags": [
+          "Auth"
+        ],
+        "summary": "Login User",
+        "description": "Login user into account. Returns access and refresh tokens",
+        "operationId": "LoginUser",
+        "parameters": [],
+        "requestBody": {
+          "description": "",
+          "content": {
+            "application/json": {
+              "schema": {
+                "allOf": [
+                  {
+                    "$ref": "#/components/schemas/LoginUserRequest"
+                  },
+                  {
+                    "example": {
+                      "email": "example@gmail.com",
+                      "password": "password"
+                    }
+                  }
+                ]
+              },
+              "example": {
+                "email": "example@gmail.com",
+                "password": "password"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "",
+            "headers": {}
+          }
+        },
+        "deprecated": false,
+        "security": [],
+        "servers": [
+          {
+            "url": "https://y5136xhfy7.execute-api.eu-central-1.amazonaws.com/dev",
+            "variables": {}
+          }
+        ]
+      }
+    },
+    "/auth/activate/{token}": {
+      "get": {
+        "tags": [
+          "Auth"
+        ],
+        "summary": "Activate User",
+        "description": "Activates user, so he can get access the API",
+        "operationId": "ActivateUser",
+        "parameters": [
+          {
+            "name": "token",
+            "in": "path",
+            "description": "Your activation code",
+            "required": true,
+            "style": "simple",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "",
+            "headers": {}
+          }
+        },
+        "deprecated": false,
+        "security": [],
+        "servers": [
+          {
+            "url": "https://y5136xhfy7.execute-api.eu-central-1.amazonaws.com/dev",
+            "variables": {}
+          }
+        ]
+      }
+    },
+    "/{path}": {
+      "get": {
+        "tags": [
+          "Links"
+        ],
+        "summary": "Redirect Link",
+        "description": "Redirects to full link",
+        "operationId": "RedirectLink",
+        "parameters": [
+          {
+            "name": "path",
+            "in": "path",
+            "description": "Short path of created link",
+            "required": true,
+            "style": "simple",
+            "schema": {
+              "type": "string",
+              "example": "msqfkb"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "",
+            "headers": {}
+          }
+        },
+        "deprecated": false,
+        "security": [],
+        "servers": [
+          {
+            "url": "https://y5136xhfy7.execute-api.eu-central-1.amazonaws.com/dev",
+            "variables": {}
+          }
+        ]
+      }
+    },
+    "/links": {
+      "post": {
+        "tags": [
+          "Links"
+        ],
+        "summary": "Create Link",
+        "description": "Creates new short link",
+        "operationId": "CreateLink",
+        "parameters": [],
+        "requestBody": {
+          "description": "",
+          "content": {
+            "application/json": {
+              "schema": {
+                "allOf": [
+                  {
+                    "$ref": "#/components/schemas/CreateLinkRequest"
+                  },
+                  {
+                    "example": {
+                      "link": "https://github.com/VladJav/serverless-academy/blob/main/short_linker_api/src/controllers/linkerController.js",
+                      "lifetime": "1d"
+                    }
+                  }
+                ]
+              },
+              "example": {
+                "link": "https://github.com/VladJav/serverless-academy/blob/main/short_linker_api/src/controllers/linkerController.js",
+                "lifetime": "1d"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "",
+            "headers": {}
+          }
+        },
+        "deprecated": false,
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "servers": [
+          {
+            "url": "https://y5136xhfy7.execute-api.eu-central-1.amazonaws.com/dev",
+            "variables": {}
+          }
+        ]
+      },
+      "get": {
+        "tags": [
+          "Links"
+        ],
+        "summary": "Get User Links",
+        "description": "Returns all links created by authenticated user",
+        "operationId": "GetUserLinks",
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": "",
+            "headers": {}
+          }
+        },
+        "deprecated": false,
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "servers": [
+          {
+            "url": "https://y5136xhfy7.execute-api.eu-central-1.amazonaws.com/dev",
+            "variables": {}
+          }
+        ]
+      }
+    },
+    "/links/{path}": {
+      "delete": {
+        "tags": [
+          "Links"
+        ],
+        "summary": "Deactivate Link",
+        "description": "Deactivates created link",
+        "operationId": "DeactivateLink",
+        "parameters": [
+          {
+            "name": "path",
+            "in": "path",
+            "description": "Short path of created link",
+            "required": true,
+            "style": "simple",
+            "schema": {
+              "type": "string",
+              "example": "msqfkb"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "",
+            "headers": {}
+          }
+        },
+        "deprecated": false,
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "servers": [
+          {
+            "url": "https://y5136xhfy7.execute-api.eu-central-1.amazonaws.com/dev",
+            "variables": {}
+          }
+        ]
+      }
+    },
+    "/user/me": {
+      "get": {
+        "tags": [
+          "User"
+        ],
+        "summary": "Show Current User",
+        "description": "Returns authenticated user id and email",
+        "operationId": "ShowCurrentUser",
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": "",
+            "headers": {}
+          }
+        },
+        "deprecated": false,
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "servers": [
+          {
+            "url": "https://y5136xhfy7.execute-api.eu-central-1.amazonaws.com/dev",
+            "variables": {}
+          }
+        ]
+      }
+    }
+  },
+  "components": {
+    "schemas": {
+      "RegisterUserRequest": {
+        "title": "RegisterUserRequest",
+        "required": [
+          "email",
+          "password"
+        ],
+        "type": "object",
+        "properties": {
+          "email": {
+            "type": "string"
+          },
+          "password": {
+            "type": "string"
+          }
+        },
+        "example": {
+          "email": "example@gmail.com",
+          "password": "password"
+        }
+      },
+      "LoginUserRequest": {
+        "title": "LoginUserRequest",
+        "required": [
+          "email",
+          "password"
+        ],
+        "type": "object",
+        "properties": {
+          "email": {
+            "type": "string"
+          },
+          "password": {
+            "type": "string"
+          }
+        },
+        "example": {
+          "email": "example@gmail.com",
+          "password": "password"
+        }
+      },
+      "CreateLinkRequest": {
+        "title": "CreateLinkRequest",
+        "required": [
+          "link",
+          "lifetime"
+        ],
+        "type": "object",
+        "properties": {
+          "link": {
+            "type": "string"
+          },
+          "lifetime": {
+            "type": "string"
+          }
+        },
+        "example": {
+          "link": "https://github.com/VladJav/serverless-academy/blob/main/short_linker_api/src/controllers/linkerController.js",
+          "lifetime": "1d"
+        }
+      }
+    },
+    "securitySchemes": {
+      "bearer": {
+        "type": "http",
+        "scheme": "bearer"
+      }
+    }
+  },
+  "security": [],
+  "tags": [
+    {
+      "name": "Auth"
+    },
+    {
+      "name": "Links"
+    },
+    {
+      "name": "User"
+    }
+  ]
+}
