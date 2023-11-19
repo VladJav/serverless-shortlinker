@@ -1,18 +1,22 @@
-<!--
-title: 'AWS NodeJS Example'
-description: 'This template demonstrates how to deploy a NodeJS function running on AWS Lambda using the traditional Serverless Framework.'
-layout: Doc
-framework: v3
-platform: AWS
-language: nodeJS
-priority: 1
-authorLink: 'https://github.com/serverless'
-authorName: 'Serverless, inc.'
-authorAvatar: 'https://avatars1.githubusercontent.com/u/13742415?s=200&v=4'
--->
-
-
 # Serverless Framework AWS NodeJS Example
+## About
+
+Cost-efficient and flexible API for a link shortener application. Uses AWS technologies to:
+* Be easily replicated to multiple AWS regions
+* Handles sudden traffic spikes
+
+### Technologies
+* Express
+* DynamoDB
+* AWS Lambda
+* AWS SQS
+* AWS SES
+* AWS EventBridge
+* TypeScript
+* JsonWebToken
+* Serverless framework
+## API Docs
+You can check our API documentation by this link: https://y5136xhfy7.execute-api.eu-central-1.amazonaws.com/dev/api-docs/
 ## Installation
 
 Install `serverless` module via NPM:
