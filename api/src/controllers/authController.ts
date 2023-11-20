@@ -18,6 +18,7 @@ export const registerUser = async (req: Request, res: Response, next: NextFuncti
         }
 
         const findResult = await UserModel.findByEmail(email);
+        console.log(findResult);
         if(findResult?.length !== 0){
             throw new ConflictError('User with this email already exists');
         }

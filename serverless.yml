@@ -71,11 +71,11 @@ functions:
           method: DELETE
           authorizer: auth
       - http: ANY {proxy+}
-#  scheduler:
-#    handler: scheduler/handler.handler
-#    events:
-#      - eventBridge:
-#          schedule: rate(1 minute)
+  scheduler:
+    handler: scheduler/handler.handler
+    events:
+      - eventBridge:
+          schedule: rate(1 hour)
   receiver:
     handler: queue/handler.handler
     events:
