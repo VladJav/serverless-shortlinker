@@ -14,19 +14,21 @@ export const registerUser = async (req: Request, res: Response, next: NextFuncti
 
         const { email, password } = req.body;
         if (!email || !password || !email.match(/^[\w-\.]+@([\w-]+\.)+[\w-]{2,4}$/g)) {
-            throw new BadRequestError('Please provide correct data');
+            next(new BadRequestError('Please provide correct data'));
+            return;
         }
 
         const findResult = await UserModel.findByEmail(email);
-        console.log(findResult);
-        if(findResult?.length !== 0){
-            throw new ConflictError('User with this email already exists');
+        if(findResult.length){
+            next(new ConflictError('User with this email already exists'));
+            return;
         }
 
         const activationCode = sign({email}, process.env.JWT_ACCESS_SECRET,  {expiresIn: '30m'});
 
         await UserModel.create(email, password, activationCode);
-        await sendVerificationMail(email, activationCode, requestUrl)
+        await sendVerificationMail(email, activationCode, requestUrl);
+
         res.status(201).json({
             success: true,
             message: 'Success! Check your email to verify account'
@@ -43,8 +45,9 @@ export const activateUser = async (req: Request, res: Response, next: NextFuncti
 
         const { email } = verify(token, process.env.JWT_ACCESS_SECRET) as JwtPayload;
         const findResult = await UserModel.findByEmail(email);
-        if(!findResult){
-            throw new UnauthenticatedError('Bad Token');
+        if(!findResult.length){
+            next(new UnauthenticatedError('Bad Token'));
+            return;
         }
         const [user] = findResult;
 
@@ -65,21 +68,25 @@ export const loginUser = async (req: Request, res: Response, next: NextFunction)
         const userAgent = req.headers['user-agent'];
         const { email, password } = req.body;
         if (!email || !password || !userAgent) {
-            throw new BadRequestError('Please provide correct data');
+            next(new BadRequestError('Please provide correct data'));
+            return;
         }
 
         const findResult = await UserModel.findByEmail(email);
-        if(findResult?.length === 0 || !findResult){
-            throw new NotFoundError(`User with email: ${email} does not exists`);
+        if(!findResult.length){
+            next(new NotFoundError(`User with email: ${email} does not exists`));
+            return;
         }
         const user = findResult[0];
 
         const isPasswordCorrect = await compare(password, user.password);
         if (!isPasswordCorrect) {
-            throw new UnauthenticatedError('Please provide correct credentials');
+            next(new UnauthenticatedError('Please provide correct credentials'));
+            return;
         }
         if (!user.isActivated) {
-            throw new UnauthenticatedError('Please verify your email');
+            next(new UnauthenticatedError('Please verify your email'));
+            return;
         }
         const accessToken = sign({userId: user.id, email}, process.env.JWT_ACCESS_SECRET,  { expiresIn: process.env.JWT_ACCESS_TTL || '60m'});
         const refreshToken = sign({userId: user.id, email}, process.env.JWT_REFRESH_SECRET);

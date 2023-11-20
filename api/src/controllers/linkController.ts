@@ -14,10 +14,10 @@ export const createLink = async (req: Request, res: Response, next: NextFunction
         const host = req.headers.host;
 
         if(!lifetime || !link || !isValidUrl(link)) {
-            throw new BadRequestError('Provide correct data');
+            next(new BadRequestError('Provide correct data'));
+            return;
         }
 
-        //
         let expiresIn = null;
         let isOneTime = false;
         switch (lifetime){
@@ -35,12 +35,13 @@ export const createLink = async (req: Request, res: Response, next: NextFunction
                 isOneTime = true;
                 break;
             default:
-                throw new BadRequestError('Provide correct lifetime data');
+                next(new BadRequestError('Provide correct lifetime data'));
+                return;
         }
         let shortLink = Math.random().toString(36).slice(2, 8);
         let isPathExists = await LinkModel.findByShortLink(shortLink);
 
-        while(isPathExists?.length !== 0){
+        while(isPathExists?.length){
             shortLink = Math.random().toString(36).slice(2, 8);
             isPathExists = await LinkModel.findByShortLink(shortLink);
         }
@@ -78,8 +79,8 @@ export const redirectLink = async (req: Request, res: Response, next: NextFuncti
         const { path } = req.params;
 
         let findResult = await LinkModel.findByShortLink(path);
-        if(!findResult?.length){
-            throw new NotFoundError('Path does not exists');
+        if(!findResult.length){
+            next(new NotFoundError('Path does not exists'));
         }
         const [ link ] = findResult;
 
@@ -99,23 +100,29 @@ export const deactivateLink = async (req: Request, res: Response, next: NextFunc
 
         const findLinkResult = await LinkModel.findByShortLink(path);
 
-        if(!findLinkResult?.length){
-            throw new NotFoundError('Link does not exists');
+        if(!findLinkResult.length){
+            next(new NotFoundError('Link does not exists'));
+            return;
         }
 
         const [ link ] = findLinkResult;
 
         if(link.user_id !== userId){
-            throw new UnauthenticatedError('Access denied');
+            next(new UnauthenticatedError('Access denied'));
+            return;
         }
         if(!link.isActive){
-            throw new BadRequestError('Link is already deactivated');
+            next(new BadRequestError('Link is already deactivated'));
+            return;
         }
 
         await LinkModel.updateIsActive(link.id, 0);
 
         const findUserResult = await UserModel.findById(link.user_id);
-        if(!findUserResult) throw new Error('User not found');
+        if(!findUserResult.length){
+            next(new Error('User not found'));
+            return;
+        }
         const [ user ] = findUserResult;
 
         const sendParams = new SendMessageCommand({

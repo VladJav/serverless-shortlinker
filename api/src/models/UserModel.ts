@@ -47,7 +47,7 @@ export class UserModel{
             Limit: 1
         })
         const { Items } = await documentClient.send(queryCommand);
-        return Items;
+        return Items || [];
     }
     static async findByEmail(email: string){
         const queryCommand = new QueryCommand({
@@ -61,6 +61,6 @@ export class UserModel{
 
         })
         const { Items } = await documentClient.send(queryCommand);
-        return Items;
+        return Items || [];
     }
 }

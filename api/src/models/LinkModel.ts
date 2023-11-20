@@ -64,7 +64,7 @@ export class LinkModel{
             Limit: 1
         })
         const { Items } = await documentClient.send(queryCommand);
-        return Items;
+        return Items || [];
     }
     static async updateVisitedTimes(id: string){
         const updateCommand = new UpdateCommand({
