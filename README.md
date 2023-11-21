@@ -61,5 +61,3 @@ sls deploy
 ```
 
 The deployed AWS Lambda functions and other essential information such as API Endpoint URLs will be displayed in the command output.
-
-More details on deploying can be found [here](https://www.serverless.com/framework/docs/providers/aws/guide/deploying).
